@@ -1,0 +1,12 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# App runtime folders
+uploads/
+processed/
+
+# OS junk
+.DS_Store
+Thumbs.db

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stem Packer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #eee;
+            line-height: 1.5;
+        }
+
+        h1, h2, h3 {
+            color: #9ad1ff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+        }
+
+        .section {
+            background: #1b1b1b;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+
+        code {
+            background: #222;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #b5ffb5;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        small {
+            color: #aaa;
+        }
+
+        select, button {
+            margin-top: 8px;
+            padding: 6px 10px;
+            font-size: 14px;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #333;
+            margin: 30px 0;
+        }
+
+        .status-note {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .toggle-header {
+            cursor: pointer;
+            user-select: none;
+            margin-top: 20px;
+        }
+
+        .toggle-header:hover {
+            color: #b5ffb5;
+        }
+
+        .stem-list {
+            display: none;
+            margin-top: 10px;
+            padding-left: 10px;
+            border-left: 2px solid #333;
+        }
+
+        .copy-btn {
+            margin-left: 8px;
+            padding: 2px 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+    </style>
+
+    <script>
+    function toggleSection(id) {
+        const el = document.getElementById(id);
+        el.style.display = el.style.display === "none" ? "block" : "none";
+    }
+
+    function copyText(text) {
+        navigator.clipboard.writeText(text);
+    }
+    </script>
+
+
+</head>
+
+<body>
+<div class="container">
+
+    <h1>Stem Packer</h1>
+
+    <p>
+        Upload stems in logical instrument groups and let the app validate,
+        organize, and prepare them for mixing or mastering.
+    </p>
+
+    <!-- ================== NAMING MAP ================== -->
+    <div class="section">
+        <h2>Stem Naming Convention Map</h2>
+        <p>
+            Use this as your guide when exporting stems from Cubase.
+            Filenames may include extra words (song name, tempo, etc),
+            but the <strong>keywords shown must appear</strong>.
+        </p>
+
+    {% for package, stems in stem_packages.items() %}
+        {% set section_id = "section_" + loop.index|string %}
+
+        <h3 class="toggle-header" onclick="toggleSection('{{ section_id }}')">
+            ▶ {{ package }}
+        </h3>
+
+        <div id="{{ section_id }}" class="stem-list">
+            <ul>
+                {% for stem in stems %}
+                    {% set stem_id = stem[0] %}
+                    {% set keywords = stem[1] %}
+                    {% set example_name = stem_id | replace("_", " ") | title | replace(" ", "_") ~ ".wav" %}
+
+                    <li>
+                        <code>{{ example_name }}</code>
+                        <button class="copy-btn"
+                                onclick="copyText('{{ example_name }}')">
+                            Copy
+                        </button>
+                        <br>
+                        <small>
+                            Keywords:
+                            {% for k in keywords %}
+                                <code>{{ k }}</code>{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </small>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+
+    </div>
+
+    <!-- ================== PACKAGE UPLOAD ================== -->
+    <div class="section">
+        <h2>Select Instrument Package</h2>
+
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <label>Instrument Group:</label><br>
+
+            <select name="package" required>
+                {% for p in packages %}
+                    {% set status = package_status[p] %}
+                    {% if status == "completed" %}
+                        <option disabled>✔ {{ p }} (completed)</option>
+                    {% elif status == "incomplete" %}
+                        <option value="{{ p }}">⚠ {{ p }} (incomplete)</option>
+                    {% else %}
+                        <option value="{{ p }}">⭕ {{ p }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+
+            <br><br>
+
+            <input type="file" name="files" multiple required>
+            <br>
+            <button type="submit">Process Package</button>
+        </form>
+
+        <p class="status-note">
+            ✔ Completed packages are locked<br>
+            ⚠ Incomplete packages may be re-uploaded<br>
+            ⭕ Not started
+        </p>
+    </div>
+
+    <!-- ================== EXPORT ================== -->
+    <div class="section">
+        {% if project_complete %}
+            <h2>Export Project</h2>
+            <p>All uploaded packages are complete.</p>
+            <a href="/download">
+                <button>Download ZIP Export</button>
+            </a>
+        {% else %}
+            <p class="status-note">
+                ZIP export will be available once all selected packages are complete.
+            </p>
+        {% endif %}
+    </div>
+
+</div>
+</body>
+</html>

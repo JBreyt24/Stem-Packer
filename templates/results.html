@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Package Results</title>
+    <style>
+        body { background:#111; color:#eee; font-family:Arial; }
+        .ok { color:#6dff6d; }
+        .missing { color:#ff6d6d; font-weight:bold; }
+    </style>
+</head>
+<body>
+
+<h1>{{ package }} Package</h1>
+
+<h2>Matched</h2>
+<ul>
+{% for m in matched %}
+    <li>
+        ✔ {{ m }}
+        {% if validations.get(m) %}
+            <ul>
+            {% for issue in validations[m] %}
+                <li style="color:#ffcc66;">⚠ {{ issue }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    </li>
+{% endfor %}
+</ul>
+
+
+<h2>Missing</h2>
+{% if missing %}
+<ul>
+    {% for m in missing %}
+        <li class="missing">✖ {{ m }}</li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="ok">All stems present 🎉</p>
+{% endif %}
+
+{% if error %}
+  <p style="color:#ff6d6d; font-weight:bold;">
+    {{ error }}
+  </p>
+{% endif %}
+
+
+<hr>
+
+<h2>Add Another Package</h2>
+<form action="/" method="get">
+    <button type="submit">Choose Another Instrument Group</button>
+</form>
+
+</body>
+</html>
